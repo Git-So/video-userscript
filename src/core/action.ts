@@ -1,3 +1,4 @@
+import { toast } from "./func";
 import { Video } from "./video";
 
 export class Action {
@@ -17,11 +18,13 @@ export class SwitchAction extends Action {
   protected enableAction() {}
   enable() {
     this.safeAction(this.enableAction);
+    toast(`${this.name}: 开`);
   }
 
   protected disableAction() {}
   disable() {
     this.safeAction(this.disableAction);
+    toast(`${this.name}: 关`);
   }
 
   toggle() {

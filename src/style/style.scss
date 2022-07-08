@@ -1,0 +1,22 @@
+@import "./const.scss";
+@import "./mixin.scss";
+@import "./animation.scss";
+
+.#{$class-prefix} {
+
+    /**
+    * 动作提示
+    */
+    &-action-toast {
+        @include absolute-center;
+        padding: 10px 15px;
+        font-size: 1.5em;
+        color: whitesmoke;
+        background-color: rgba(0, 0, 0, 0.555);
+        z-index: 9000;
+    }
+
+    &-action-toast-animation {
+        animation: toast-show 1.2s alternate forwards;
+    }
+}

@@ -1,3 +1,4 @@
+import "./style/style.scss";
 import * as Action from "./core/action";
 
 document.addEventListener("keydown", (e) => {

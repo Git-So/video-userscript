@@ -12,6 +12,9 @@ document.addEventListener("keydown", (e) => {
     case e.code == "Enter":
       new Action.Fullscreen().toggle();
       break;
+    case e.code == "Space":
+      new Action.PlayState().toggle();
+      break;
     default:
       hasAction = false;
   }

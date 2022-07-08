@@ -50,3 +50,22 @@ export class Fullscreen extends SwitchAction {
     document.exitFullscreen();
   }
 }
+
+/**
+ * 视频播放暂停
+ */
+export class PlayState extends SwitchAction {
+  name = "视频播放";
+
+  get isEnable(): boolean {
+    return !Video.media?.paused;
+  }
+
+  protected enableAction(): void {
+    Video.media?.play();
+  }
+
+  protected disableAction(): void {
+    Video.media?.pause();
+  }
+}

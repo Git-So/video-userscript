@@ -57,3 +57,14 @@ export function toast(text: string) {
     toast.classList.add(animationClassName);
   });
 }
+
+/**
+ * 当前是否焦点可编辑元素
+ */
+export function isActiveElementEditable(): boolean {
+  const activeElement = document.activeElement as HTMLElement;
+  if (!activeElement) return false;
+  if (activeElement.isContentEditable) return true;
+  if ("value" in activeElement) return true;
+  return false;
+}

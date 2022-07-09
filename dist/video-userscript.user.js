@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657347775
+// @version           1657349178
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
@@ -255,6 +255,24 @@ var __publicField = (obj, key, value) => {
       (_a = this.media) == null ? void 0 : _a.pause();
     }
   }
+  class PictureInPicture extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u753B\u4E2D\u753B");
+    }
+    get isEnable() {
+      return !!document.pictureInPictureElement;
+    }
+    enableAction() {
+      var _a;
+      (_a = this.media) == null ? void 0 : _a.requestPictureInPicture();
+    }
+    disableAction() {
+      if (!this.isEnable)
+        return;
+      document.exitPictureInPicture();
+    }
+  }
   class CurrentTime extends StepAction {
     constructor() {
       super(...arguments);
@@ -341,6 +359,9 @@ var __publicField = (obj, key, value) => {
         break;
       case (e.shiftKey && e.code == "KeyC"):
         new PlaybackRate().add();
+        break;
+      case (e.ctrlKey && e.shiftKey && e.code == "BracketRight"):
+        new PictureInPicture().toggle();
         break;
       default:
         hasAction = false;

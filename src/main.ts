@@ -35,6 +35,9 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyC":
       new Action.PlaybackRate().add();
       break;
+    case e.ctrlKey && e.shiftKey && e.code == "BracketRight":
+      new Action.PictureInPicture().toggle();
+      break;
     default:
       hasAction = false;
   }

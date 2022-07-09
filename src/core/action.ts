@@ -106,6 +106,27 @@ export class PlayState extends SwitchAction {
 }
 
 /**
+ * 画中画
+ * 不兼容火狐
+ */
+export class PictureInPicture extends SwitchAction {
+  protected _name = "画中画";
+
+  get isEnable(): boolean {
+    return !!document.pictureInPictureElement;
+  }
+
+  protected enableAction(): void {
+    this.media?.requestPictureInPicture();
+  }
+
+  protected disableAction(): void {
+    if (!this.isEnable) return;
+    document.exitPictureInPicture();
+  }
+}
+
+/**
  * 视频进度
  */
 export class CurrentTime extends StepAction {

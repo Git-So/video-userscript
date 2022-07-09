@@ -1,9 +1,13 @@
 // ==UserScript==
-// @name              Video Userscript
-// @version           1657354152
-// @description       HTML5 视频增强脚本
+// @name              HTML5 视频增强脚本
+// @version           1657355269
+// @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
-// @namespace         site.sooo.userscript.video
+// @namespace         https://github.com/Git-So/video-userscript
+// @homepageURL       https://github.com/Git-So/video-userscript
+// @updateURL         https://raw.githubusercontent.com/Git-So/video-userscript/main/dist/video-userscript.user.js
+// @downloadURL       https://raw.githubusercontent.com/Git-So/video-userscript/main/dist/video-userscript.user.js
+// @supportURL        https://github.com/Git-So/video-userscript/issues
 // @match             http://*/*
 // @match             https://*/*
 // @grant             GM_addStyle

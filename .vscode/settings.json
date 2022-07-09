@@ -4,6 +4,7 @@
         "pnpm",
         "sooo",
         "tampermonkey",
-        "userscript"
+        "userscript",
+        "Violentmonkey"
     ]
 }

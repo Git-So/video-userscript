@@ -7,4 +7,5 @@ module.exports = defineTmHeader({
   description: "HTML5 视频增强脚本",
   version: `${(new Date().valueOf() / 1000) | 0}`,
   grant: ["GM_addStyle"],
+  match: ["http://*/*", "https://*/*"],
 });

@@ -1,9 +1,11 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657347062
+// @version           1657347525
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
+// @match             http://*/*
+// @match             https://*/*
 // @grant             GM_addStyle
 // ==/UserScript==
 

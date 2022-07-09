@@ -256,3 +256,22 @@ export class Mirror extends SwitchAction {
     this.player?.classList.remove(this.className);
   }
 }
+
+/**
+ * 循环播放
+ */
+export class Loop extends SwitchAction {
+  protected _name = "循环播放";
+
+  get isEnable(): boolean {
+    return !!this.media?.loop;
+  }
+
+  protected enableAction(): void {
+    this.media!.loop = true;
+  }
+
+  protected disableAction(): void {
+    this.media!.loop = false;
+  }
+}

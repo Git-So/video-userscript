@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657353754
+// @version           1657354152
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
@@ -405,6 +405,22 @@ var __publicField = (obj, key, value) => {
       (_a = this.player) == null ? void 0 : _a.classList.remove(this.className);
     }
   }
+  class Loop extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u5FAA\u73AF\u64AD\u653E");
+    }
+    get isEnable() {
+      var _a;
+      return !!((_a = this.media) == null ? void 0 : _a.loop);
+    }
+    enableAction() {
+      this.media.loop = true;
+    }
+    disableAction() {
+      this.media.loop = false;
+    }
+  }
   document.addEventListener("keydown", (e) => {
     if (isActiveElementEditable() || !isExistMedia())
       return;
@@ -445,6 +461,9 @@ var __publicField = (obj, key, value) => {
         break;
       case (e.shiftKey && e.code == "KeyH"):
         new Mirror().toggle();
+        break;
+      case (e.shiftKey && e.code == "KeyL"):
+        new Loop().toggle();
         break;
       default:
         hasAction = false;

@@ -44,6 +44,9 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyH":
       new Action.Mirror().toggle();
       break;
+    case e.shiftKey && e.code == "KeyL":
+      new Action.Loop().toggle();
+      break;
     default:
       hasAction = false;
   }

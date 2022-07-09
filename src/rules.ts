@@ -9,7 +9,7 @@ const value: Rule[] = [
   {
     // 哔哩哔哩
     match: `^https?://www\.bilibili\.com/video/`,
-    player: "#bilibili-player .bpx-player-container .bpx-player-video-area",
+    player: "#bilibili-player .bpx-player-container",
   },
 ];
 

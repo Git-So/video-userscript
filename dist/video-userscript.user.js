@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657349178
+// @version           1657350488
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
@@ -37,6 +37,9 @@ var __publicField = (obj, key, value) => {
   /**
   * 动作提示
   */
+  /**
+  * 关灯影院模式
+  */
 }
 .sooo--video-action-toast {
   position: absolute !important;
@@ -52,6 +55,21 @@ var __publicField = (obj, key, value) => {
 }
 .sooo--video-action-toast-animation {
   animation: toast-show 1.2s alternate forwards;
+}
+.sooo--video-movie-mode {
+  z-index: 99999999 !important;
+}
+.sooo--video-movie-mode-parent {
+  z-index: auto !important;
+}
+.sooo--video-movie-mode-modal {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  position: fixed !important;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 1000000;
 }  `);
   var style = "";
   const value = [
@@ -328,6 +346,40 @@ var __publicField = (obj, key, value) => {
       this.setValue(this.defaultIdx, false);
     }
   }
+  class MovieMode extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u5F71\u9662\u6A21\u5F0F");
+      __publicField(this, "className", "sooo--video-movie-mode");
+      __publicField(this, "parentClassName", "sooo--video-movie-mode-parent");
+      __publicField(this, "modalClassName", "sooo--video-movie-mode-modal");
+    }
+    get isEnable() {
+      var _a;
+      return !!((_a = this.player) == null ? void 0 : _a.classList.contains(this.className));
+    }
+    enableAction() {
+      var _a;
+      (_a = this.player) == null ? void 0 : _a.classList.add(this.className);
+      document.body.append((() => {
+        const modal = document.createElement("DIV");
+        modal.className = this.modalClassName;
+        return modal;
+      })());
+      actionByAncestor(this.player, (element) => {
+        element.classList.add(this.parentClassName);
+        return true;
+      });
+    }
+    disableAction() {
+      var _a, _b;
+      (_a = this.player) == null ? void 0 : _a.classList.remove(this.className);
+      (_b = document.querySelector(`.${this.modalClassName}`)) == null ? void 0 : _b.remove();
+      document.querySelectorAll(`.${this.parentClassName}`).forEach((el) => {
+        el.classList.remove(this.parentClassName);
+      });
+    }
+  }
   document.addEventListener("keydown", (e) => {
     if (isActiveElementEditable() || !isExistMedia())
       return;
@@ -362,6 +414,9 @@ var __publicField = (obj, key, value) => {
         break;
       case (e.ctrlKey && e.shiftKey && e.code == "BracketRight"):
         new PictureInPicture().toggle();
+        break;
+      case (e.shiftKey && e.code == "KeyO"):
+        new MovieMode().toggle();
         break;
       default:
         hasAction = false;

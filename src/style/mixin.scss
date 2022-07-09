@@ -1,7 +1,24 @@
+@mixin full {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 @mixin absolute-center {
     position: absolute !important;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
+}
+
+@mixin fixed-full {
+    @include full();
+    position: fixed !important;
+}
+
+@mixin player-z-index {
+    // 防止有些网页不规范堆数
+    z-index: 99999999 !important;
 }

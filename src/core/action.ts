@@ -1,4 +1,4 @@
-import { between, toast } from "./func";
+import { actionByAncestor, between, toast } from "./func";
 import { Video } from "./video";
 
 export class Action {
@@ -187,5 +187,51 @@ export class PlaybackRate extends StepAction {
 
   restart() {
     this.setValue(this.defaultIdx, false);
+  }
+}
+
+/**
+ * 影院模式/关灯模式
+ */
+export class MovieMode extends SwitchAction {
+  protected _name = "影院模式";
+
+  private className = "sooo--video-movie-mode";
+  private parentClassName = "sooo--video-movie-mode-parent";
+  private modalClassName = "sooo--video-movie-mode-modal";
+
+  get isEnable(): boolean {
+    return !!this.player?.classList.contains(this.className);
+  }
+
+  protected enableAction(): void {
+    this.player?.classList.add(this.className);
+
+    // 添加遮罩
+    document.body.append(
+      ((): HTMLElement => {
+        const modal = document.createElement("DIV");
+        modal.className = this.modalClassName;
+        return modal;
+      })()
+    );
+
+    // 添加父级 zIndex
+    actionByAncestor(this.player!, (element) => {
+      element.classList.add(this.parentClassName);
+      return true;
+    });
+  }
+
+  protected disableAction(): void {
+    this.player?.classList.remove(this.className);
+
+    // 清除遮罩
+    document.querySelector(`.${this.modalClassName}`)?.remove();
+
+    // 清除 zIndex
+    document.querySelectorAll(`.${this.parentClassName}`).forEach((el) => {
+      el.classList.remove(this.parentClassName);
+    });
   }
 }

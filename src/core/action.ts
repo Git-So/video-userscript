@@ -235,3 +235,24 @@ export class MovieMode extends SwitchAction {
     });
   }
 }
+
+/**
+ * 视频镜像
+ */
+export class Mirror extends SwitchAction {
+  protected _name = "视频镜像";
+
+  private className = "sooo--video-mirror";
+
+  get isEnable(): boolean {
+    return !!this.player?.classList.contains(this.className);
+  }
+
+  protected enableAction(): void {
+    this.player?.classList.add(this.className);
+  }
+
+  protected disableAction(): void {
+    this.player?.classList.remove(this.className);
+  }
+}

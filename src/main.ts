@@ -41,6 +41,9 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyO":
       new Action.MovieMode().toggle();
       break;
+    case e.shiftKey && e.code == "KeyH":
+      new Action.Mirror().toggle();
+      break;
     default:
       hasAction = false;
   }

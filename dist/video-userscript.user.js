@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657350488
+// @version           1657353754
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
@@ -40,6 +40,9 @@ var __publicField = (obj, key, value) => {
   /**
   * 关灯影院模式
   */
+  /**
+  * 视频镜像
+  */
 }
 .sooo--video-action-toast {
   position: absolute !important;
@@ -70,6 +73,9 @@ var __publicField = (obj, key, value) => {
   position: fixed !important;
   background: rgba(0, 0, 0, 0.9);
   z-index: 1000000;
+}
+.sooo--video-mirror video {
+  transform: rotateX(0deg) rotateY(180deg);
 }  `);
   var style = "";
   const value = [
@@ -380,6 +386,25 @@ var __publicField = (obj, key, value) => {
       });
     }
   }
+  class Mirror extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u89C6\u9891\u955C\u50CF");
+      __publicField(this, "className", "sooo--video-mirror");
+    }
+    get isEnable() {
+      var _a;
+      return !!((_a = this.player) == null ? void 0 : _a.classList.contains(this.className));
+    }
+    enableAction() {
+      var _a;
+      (_a = this.player) == null ? void 0 : _a.classList.add(this.className);
+    }
+    disableAction() {
+      var _a;
+      (_a = this.player) == null ? void 0 : _a.classList.remove(this.className);
+    }
+  }
   document.addEventListener("keydown", (e) => {
     if (isActiveElementEditable() || !isExistMedia())
       return;
@@ -417,6 +442,9 @@ var __publicField = (obj, key, value) => {
         break;
       case (e.shiftKey && e.code == "KeyO"):
         new MovieMode().toggle();
+        break;
+      case (e.shiftKey && e.code == "KeyH"):
+        new Mirror().toggle();
         break;
       default:
         hasAction = false;

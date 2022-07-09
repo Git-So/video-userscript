@@ -36,4 +36,11 @@
         background: rgba(0, 0, 0, 0.9);
         z-index: 1000000;
     }
+
+    /**
+    * 视频镜像
+    */
+    &-mirror video {
+        transform: rotateX(0deg) rotateY(180deg);
+    }
 }

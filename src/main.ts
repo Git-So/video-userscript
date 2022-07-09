@@ -15,6 +15,12 @@ document.addEventListener("keydown", (e) => {
     case e.code == "Space":
       new Action.PlayState().toggle();
       break;
+    case e.shiftKey && e.code == "KeyA":
+      new Action.CurrentTime().sub();
+      break;
+    case e.shiftKey && e.code == "KeyD":
+      new Action.CurrentTime().add();
+      break;
     default:
       hasAction = false;
   }

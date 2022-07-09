@@ -32,6 +32,20 @@ export class SwitchAction extends Action {
   }
 }
 
+export class StepAction extends Action {
+  step = 1;
+
+  setValue(_value: number, _isStep = true) {}
+
+  add(step = this.step) {
+    this.setValue(+step);
+  }
+
+  sub(step = this.step) {
+    this.setValue(-step);
+  }
+}
+
 /**
  * 视频全屏
  */
@@ -67,5 +81,21 @@ export class PlayState extends SwitchAction {
 
   protected disableAction(): void {
     Video.media?.pause();
+  }
+}
+
+/**
+ * 视频进度
+ */
+export class CurrentTime extends StepAction {
+  name = "视频进度";
+  step = 10;
+
+  setValue(value: number, isStep = true) {
+    this.safeAction(() => {
+      const currentTime = isStep ? Video.media!.currentTime + value : value;
+      Video.media!.currentTime = currentTime;
+      toast(`${this.name}: ${value < 0 ? "" : "+"}${value}秒`);
+    });
   }
 }

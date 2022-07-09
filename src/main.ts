@@ -21,6 +21,12 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyD":
       new Action.CurrentTime().add();
       break;
+    case e.shiftKey && e.code == "KeyW":
+      new Action.Volume().add();
+      break;
+    case e.shiftKey && e.code == "KeyS":
+      new Action.Volume().sub();
+      break;
     default:
       hasAction = false;
   }

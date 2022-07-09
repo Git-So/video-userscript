@@ -99,3 +99,19 @@ export class CurrentTime extends StepAction {
     });
   }
 }
+
+/**
+ * 音量调整
+ */
+export class Volume extends StepAction {
+  name = "音量";
+  step = 0.1;
+
+  setValue(value: number, isStep = true) {
+    this.safeAction(() => {
+      const volume = isStep ? Video.media!.volume + value : value;
+      Video.media!.volume = volume;
+      toast(`${this.name}:${(Video.media!.volume * 100) | 0}% `);
+    });
+  }
+}

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              HTML5 视频增强脚本
-// @version           1657355269
+// @version           1657356111
 // @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
 // @namespace         https://github.com/Git-So/video-userscript
@@ -425,6 +425,22 @@ var __publicField = (obj, key, value) => {
       this.media.loop = false;
     }
   }
+  class Muted extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u89C6\u9891\u9759\u97F3");
+    }
+    get isEnable() {
+      var _a;
+      return !!((_a = this.media) == null ? void 0 : _a.muted);
+    }
+    enableAction() {
+      this.media.muted = true;
+    }
+    disableAction() {
+      this.media.muted = false;
+    }
+  }
   document.addEventListener("keydown", (e) => {
     if (isActiveElementEditable() || !isExistMedia())
       return;
@@ -468,6 +484,9 @@ var __publicField = (obj, key, value) => {
         break;
       case (e.shiftKey && e.code == "KeyL"):
         new Loop().toggle();
+        break;
+      case (e.shiftKey && e.code == "KeyM"):
+        new Muted().toggle();
         break;
       default:
         hasAction = false;

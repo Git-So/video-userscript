@@ -275,3 +275,22 @@ export class Loop extends SwitchAction {
     this.media!.loop = false;
   }
 }
+
+/**
+ * 视频静音
+ */
+export class Muted extends SwitchAction {
+  protected _name = "视频静音";
+
+  get isEnable(): boolean {
+    return !!this.media?.muted;
+  }
+
+  protected enableAction(): void {
+    this.media!.muted = true;
+  }
+
+  protected disableAction(): void {
+    this.media!.muted = false;
+  }
+}

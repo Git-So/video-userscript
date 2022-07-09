@@ -47,6 +47,9 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyL":
       new Action.Loop().toggle();
       break;
+    case e.shiftKey && e.code == "KeyM":
+      new Action.Muted().toggle();
+      break;
     default:
       hasAction = false;
   }

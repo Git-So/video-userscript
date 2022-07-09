@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              HTML5 视频增强脚本
-// @version           1657371881
+// @version           1657374416
 // @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
 // @namespace         https://github.com/Git-So/video-userscript
@@ -86,6 +86,10 @@ var __publicField = (obj, key, value) => {
     {
       match: `^https?://www.bilibili.com/video/`,
       player: "#bilibili-player .bpx-player-container"
+    },
+    {
+      match: `^https?://haokan.baidu.com/v?`,
+      player: "#mse .art-video-player"
     }
   ];
   class Video {

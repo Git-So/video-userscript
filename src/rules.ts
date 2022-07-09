@@ -11,6 +11,11 @@ const value: Rule[] = [
     match: `^https?://www\.bilibili\.com/video/`,
     player: "#bilibili-player .bpx-player-container",
   },
+  {
+    // 好看视频
+    match: `^https?://haokan\.baidu\.com/v\?`,
+    player: "#mse .art-video-player",
+  },
 ];
 
 export default value;

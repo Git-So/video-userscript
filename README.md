@@ -6,7 +6,7 @@
 
 ### 简介
 
-脚本基于**Violentmonkey**开发，为 HTML5 视频，添加一些通用功能
+脚本基于**Violentmonkey**环境测试，为 HTML5 视频，添加一些通用功能
 
 
 ### 快捷键

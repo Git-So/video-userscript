@@ -74,3 +74,16 @@ export function isActiveElementEditable(): boolean {
 export function isExistMedia(): boolean {
   return !!new Video().media();
 }
+
+/**
+ * 获取一个范围内的数,最小为最小值，最大为最大值
+ */
+export function between(
+  value: number,
+  min: number = 0,
+  max: number = 1
+): number {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}

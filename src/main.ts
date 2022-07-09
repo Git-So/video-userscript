@@ -26,6 +26,15 @@ document.addEventListener("keydown", (e) => {
     case e.shiftKey && e.code == "KeyS":
       new Action.Volume().sub();
       break;
+    case e.shiftKey && e.code == "KeyZ":
+      new Action.PlaybackRate().sub();
+      break;
+    case e.shiftKey && e.code == "KeyX":
+      new Action.PlaybackRate().restart();
+      break;
+    case e.shiftKey && e.code == "KeyC":
+      new Action.PlaybackRate().add();
+      break;
     default:
       hasAction = false;
   }

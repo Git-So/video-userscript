@@ -1,4 +1,4 @@
-import { toast } from "./func";
+import { between, toast } from "./func";
 import { Video } from "./video";
 
 export class Action {
@@ -134,5 +134,37 @@ export class Volume extends StepAction {
       this.media!.volume = volume;
       this.toast(`${this.name}:${(this.media!.volume * 100) | 0}% `);
     });
+  }
+}
+
+/**
+ * 倍数播放
+ */
+export class PlaybackRate extends StepAction {
+  protected _name = "倍数播放";
+  step = 1;
+
+  private playbackRate = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5];
+  private defaultIdx = 3;
+
+  private get currIdx(): number {
+    if (!this.media) return this.defaultIdx;
+
+    const idx = this.playbackRate.indexOf(this.media.playbackRate);
+    return idx < 0 ? this.defaultIdx : idx;
+  }
+
+  setValue(value: number, isStep = true) {
+    this.safeAction(() => {
+      value = isStep ? this.currIdx + value : value;
+      const idx = between(value, 0, this.playbackRate.length - 1);
+      const rate = this.playbackRate[idx];
+      this.media!.playbackRate = rate;
+      this.toast(`${this.name}: ${rate}x`);
+    });
+  }
+
+  restart() {
+    this.setValue(this.defaultIdx, false);
   }
 }

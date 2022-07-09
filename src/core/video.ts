@@ -6,7 +6,7 @@ export class Video {
   /**
    * 获取当前网站播放器规则
    */
-  static get rule(): Rule | null {
+  rule(): Rule | null {
     for (const rule of rules) {
       const rg = new RegExp(rule.match);
       if (location.href.search(rg) > -1) return rule;
@@ -17,7 +17,7 @@ export class Video {
   /**
    * 默认播放元组件
    */
-  static get defaultMedia(): HTMLVideoElement | null {
+  defaultMedia(): HTMLVideoElement | null {
     const items = document.querySelectorAll("video");
     let media = items[0] ?? null;
     for (const item of items) {
@@ -30,8 +30,8 @@ export class Video {
   /**
    * 默认播放器组件
    */
-  static get defaultPlayer(): HTMLElement | null {
-    let player: HTMLElement | null = this.defaultMedia;
+  defaultPlayer(media: HTMLVideoElement | null = null): HTMLElement | null {
+    let player: HTMLElement | null = media ?? this.defaultMedia();
     if (!player) return null;
 
     return actionByAncestor(player, (parent) => {
@@ -45,21 +45,21 @@ export class Video {
   /**
    * 播放器元组件
    */
-  static get media(): HTMLVideoElement | null {
-    const rule = this.rule;
+  media(): HTMLVideoElement | null {
+    const rule = this.rule();
     if (rule) {
       if (rule.media) return document.querySelector(rule.media);
       return document.querySelector(`${rule.player} video`);
     }
-    return this.defaultMedia;
+    return this.defaultMedia();
   }
 
   /**
    * 播放器组件
    */
-  static get player(): HTMLElement | null {
-    const rule = this.rule;
+  player(media: HTMLVideoElement | null = null): HTMLElement | null {
+    const rule = this.rule();
     if (rule) return document.querySelector(rule.player);
-    return this.defaultPlayer;
+    return this.defaultPlayer(media);
   }
 }

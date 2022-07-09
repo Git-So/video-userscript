@@ -33,8 +33,7 @@ export function reanimation(func: () => void) {
 /**
  * 显示动作提示
  */
-export function toast(text: string) {
-  const player = Video.player;
+export function toast(player: HTMLElement | null, text: string) {
   if (!player) return;
 
   // 添加提示组件
@@ -67,4 +66,11 @@ export function isActiveElementEditable(): boolean {
   if (activeElement.isContentEditable) return true;
   if ("value" in activeElement) return true;
   return false;
+}
+
+/**
+ * 是否存在播放器元组件
+ */
+export function isExistMedia(): boolean {
+  return !!new Video().media();
 }

@@ -2,11 +2,32 @@ import { toast } from "./func";
 import { Video } from "./video";
 
 export class Action {
-  name = "";
+  protected _name = "";
+  get name() {
+    return this._name;
+  }
+
+  protected video = new Video();
+
+  protected _media: HTMLVideoElement | null = null;
+  get media(): HTMLVideoElement | null {
+    if (!this._media) this._media = this.video.media();
+    return this._media;
+  }
+
+  protected _player: HTMLElement | null = null;
+  get player(): HTMLElement | null {
+    if (!this._player) this._player = this.video.player(this.media);
+    return this._player;
+  }
 
   protected safeAction(action: () => void, that: Action = this) {
-    if (!Video.media) return;
+    if (!this.media) return;
     action.apply(that);
+  }
+
+  protected toast(text: string) {
+    toast(this.player, text);
   }
 }
 
@@ -18,13 +39,13 @@ export class SwitchAction extends Action {
   protected enableAction() {}
   enable() {
     this.safeAction(this.enableAction);
-    toast(`${this.name}: 开`);
+    this.toast(`${this.name}: 开`);
   }
 
   protected disableAction() {}
   disable() {
     this.safeAction(this.disableAction);
-    toast(`${this.name}: 关`);
+    this.toast(`${this.name}: 关`);
   }
 
   toggle() {
@@ -50,14 +71,14 @@ export class StepAction extends Action {
  * 视频全屏
  */
 export class Fullscreen extends SwitchAction {
-  name = "视频全屏";
+  protected _name = "视频全屏";
 
   get isEnable(): boolean {
     return !!document.fullscreenElement;
   }
 
   protected enableAction(): void {
-    Video.player?.requestFullscreen();
+    this.player?.requestFullscreen();
   }
 
   protected disableAction(): void {
@@ -69,18 +90,18 @@ export class Fullscreen extends SwitchAction {
  * 视频播放暂停
  */
 export class PlayState extends SwitchAction {
-  name = "视频播放";
+  protected _name = "视频播放";
 
   get isEnable(): boolean {
-    return !Video.media?.paused;
+    return !this.media?.paused;
   }
 
   protected enableAction(): void {
-    Video.media?.play();
+    this.media?.play();
   }
 
   protected disableAction(): void {
-    Video.media?.pause();
+    this.media?.pause();
   }
 }
 
@@ -88,14 +109,14 @@ export class PlayState extends SwitchAction {
  * 视频进度
  */
 export class CurrentTime extends StepAction {
-  name = "视频进度";
+  protected _name = "视频进度";
   step = 10;
 
   setValue(value: number, isStep = true) {
     this.safeAction(() => {
-      const currentTime = isStep ? Video.media!.currentTime + value : value;
-      Video.media!.currentTime = currentTime;
-      toast(`${this.name}: ${value < 0 ? "" : "+"}${value}秒`);
+      const currentTime = isStep ? this.media!.currentTime + value : value;
+      this.media!.currentTime = currentTime;
+      this.toast(`${this.name}: ${value < 0 ? "" : "+"}${value}秒`);
     });
   }
 }
@@ -104,14 +125,14 @@ export class CurrentTime extends StepAction {
  * 音量调整
  */
 export class Volume extends StepAction {
-  name = "音量";
+  protected _name = "音量";
   step = 0.1;
 
   setValue(value: number, isStep = true) {
     this.safeAction(() => {
-      const volume = isStep ? Video.media!.volume + value : value;
-      Video.media!.volume = volume;
-      toast(`${this.name}:${(Video.media!.volume * 100) | 0}% `);
+      const volume = isStep ? this.media!.volume + value : value;
+      this.media!.volume = volume;
+      this.toast(`${this.name}:${(this.media!.volume * 100) | 0}% `);
     });
   }
 }

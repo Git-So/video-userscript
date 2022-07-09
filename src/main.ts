@@ -1,11 +1,10 @@
 import "./style/style.scss";
 import * as Action from "./core/action";
-import { isActiveElementEditable } from "./core/func";
-import { Video } from "./core/video";
+import { isActiveElementEditable, isExistMedia } from "./core/func";
 
 document.addEventListener("keydown", (e) => {
   // 元素可编辑 或 未包含播放器元组件 忽略当前事件
-  if (isActiveElementEditable() || !Video.media) return;
+  if (isActiveElementEditable() || !isExistMedia()) return;
 
   let hasAction = true;
   switch (true) {

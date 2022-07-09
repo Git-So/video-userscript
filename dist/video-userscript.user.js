@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              Video Userscript
-// @version           1657347525
+// @version           1657347775
 // @description       HTML5 视频增强脚本
 // @author            So
 // @namespace         site.sooo.userscript.video
@@ -278,7 +278,7 @@ var __publicField = (obj, key, value) => {
     setValue(value2, isStep = true) {
       this.safeAction(() => {
         const volume = isStep ? this.media.volume + value2 : value2;
-        this.media.volume = volume;
+        this.media.volume = between(volume, 0, 1);
         this.toast(`${this.name}:${this.media.volume * 100 | 0}% `);
       });
     }

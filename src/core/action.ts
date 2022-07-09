@@ -131,7 +131,7 @@ export class Volume extends StepAction {
   setValue(value: number, isStep = true) {
     this.safeAction(() => {
       const volume = isStep ? this.media!.volume + value : value;
-      this.media!.volume = volume;
+      this.media!.volume = between(volume, 0, 1);
       this.toast(`${this.name}:${(this.media!.volume * 100) | 0}% `);
     });
   }

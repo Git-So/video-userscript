@@ -12,6 +12,11 @@
     text-align: center;
 }
 
+@mixin absolute-full {
+    @include full();
+    position: absolute !important;
+}
+
 @mixin fixed-full {
     @include full();
     position: fixed !important;

@@ -13,7 +13,7 @@
         font-size: 18px;
         color: whitesmoke;
         background-color: rgba(0, 0, 0, 0.555);
-        z-index: var($max-7-z-index);
+        z-index: #{$max-7-z-index};
     }
 
     &-action-toast-animation {
@@ -34,7 +34,7 @@
     &-movie-mode-modal {
         @include fixed-full;
         background: rgba(0, 0, 0, 0.9);
-        z-index: var($max-5-z-index);
+        z-index: #{$max-5-z-index};
     }
 
     /**

@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              HTML5 视频增强脚本
-// @version           1657374416
+// @version           1657803808
 // @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
 // @namespace         https://github.com/Git-So/video-userscript
@@ -70,8 +70,7 @@ var __publicField = (obj, key, value) => {
   z-index: auto !important;
 }
 .sooo--video-movie-mode-modal {
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   position: fixed !important;

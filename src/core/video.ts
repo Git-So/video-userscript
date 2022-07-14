@@ -17,13 +17,25 @@ export class Video {
   /**
    * 默认播放元组件
    */
-  defaultMedia(): HTMLVideoElement | null {
-    const items = document.querySelectorAll("video");
-    let media = items[0] ?? null;
-    for (const item of items) {
-      if (!item.paused) break;
+  defaultMedia(
+    doc: Document = document,
+    isAllowPaused = true
+  ): HTMLVideoElement | null {
+    // 直接 video 组件
+    const videoArr = doc.querySelectorAll("video");
+    let media = isAllowPaused ? videoArr[0] : null;
+    for (const item of videoArr) {
+      if (item.paused) continue;
       media = item;
     }
+
+    // 获取 iframe 组件
+    const iframeArr = doc.querySelectorAll("iframe");
+    for (const iframe of iframeArr) {
+      if (!iframe.contentDocument) continue;
+      media = this.defaultMedia(iframe.contentDocument, false) ?? media;
+    }
+
     return media;
   }
 

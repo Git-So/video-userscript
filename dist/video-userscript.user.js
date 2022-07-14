@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              HTML5 视频增强脚本
-// @version           1657803808
+// @version           1657804186
 // @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
 // @namespace         https://github.com/Git-So/video-userscript
@@ -55,7 +55,7 @@ var __publicField = (obj, key, value) => {
   transform: translate(-50%, -50%);
   text-align: center;
   padding: 10px 15px;
-  font-size: 1.5em;
+  font-size: 18px;
   color: whitesmoke;
   background-color: rgba(0, 0, 0, 0.555);
   z-index: 9000;

@@ -1,4 +1,10 @@
-import { actionByAncestor, between, toast } from "./func";
+import {
+  actionOfAllParent,
+  actionOfAllSubWindow,
+  between,
+  topWindow,
+} from "./func";
+import { UserscriptWindow } from "./typing";
 import { Video } from "./video";
 
 export class Action {
@@ -7,27 +13,29 @@ export class Action {
     return this._name;
   }
 
-  protected video = new Video();
-
-  protected _media: HTMLVideoElement | null = null;
-  get media(): HTMLVideoElement | null {
-    if (!this._media) this._media = this.video.media();
-    return this._media;
+  get video(): Video {
+    return Video.instance;
   }
 
-  protected _player: HTMLElement | null = null;
+  get media(): HTMLVideoElement | null {
+    return this.video.element();
+  }
+
   get player(): HTMLElement | null {
-    if (!this._player) this._player = this.video.player(this.media);
-    return this._player;
+    return this.video.player();
+  }
+
+  get window(): UserscriptWindow {
+    return topWindow();
+  }
+
+  get document(): Document {
+    return this.window.document;
   }
 
   protected safeAction(action: () => void, that: Action = this) {
     if (!this.media) return;
     action.apply(that);
-  }
-
-  protected toast(text: string) {
-    toast(this.player, text);
   }
 }
 
@@ -39,13 +47,13 @@ export class SwitchAction extends Action {
   protected enableAction() {}
   enable() {
     this.safeAction(this.enableAction);
-    this.toast(`${this.name}: 开`);
+    this.video.toast(`${this.name}: 开`);
   }
 
   protected disableAction() {}
   disable() {
     this.safeAction(this.disableAction);
-    this.toast(`${this.name}: 关`);
+    this.video.toast(`${this.name}: 关`);
   }
 
   toggle() {
@@ -74,7 +82,7 @@ export class Fullscreen extends SwitchAction {
   protected _name = "视频全屏";
 
   get isEnable(): boolean {
-    return !!document.fullscreenElement;
+    return !!this.document.fullscreenElement;
   }
 
   protected enableAction(): void {
@@ -82,7 +90,7 @@ export class Fullscreen extends SwitchAction {
   }
 
   protected disableAction(): void {
-    document.exitFullscreen();
+    this.document.exitFullscreen();
   }
 }
 
@@ -113,7 +121,7 @@ export class PictureInPicture extends SwitchAction {
   protected _name = "画中画";
 
   get isEnable(): boolean {
-    return !!document.pictureInPictureElement;
+    return !!this.media?.ownerDocument.pictureInPictureElement;
   }
 
   protected enableAction(): void {
@@ -122,7 +130,7 @@ export class PictureInPicture extends SwitchAction {
 
   protected disableAction(): void {
     if (!this.isEnable) return;
-    document.exitPictureInPicture();
+    this.media?.ownerDocument.exitPictureInPicture();
   }
 }
 
@@ -137,7 +145,7 @@ export class CurrentTime extends StepAction {
     this.safeAction(() => {
       const currentTime = isStep ? this.media!.currentTime + value : value;
       this.media!.currentTime = currentTime;
-      this.toast(`${this.name}: ${value < 0 ? "" : "+"}${value}秒`);
+      this.video.toast(`${this.name}: ${value < 0 ? "" : "+"}${value}秒`);
     });
   }
 }
@@ -153,7 +161,7 @@ export class Volume extends StepAction {
     this.safeAction(() => {
       const volume = isStep ? this.media!.volume + value : value;
       this.media!.volume = between(volume, 0, 1);
-      this.toast(`${this.name}:${(this.media!.volume * 100) | 0}% `);
+      this.video.toast(`${this.name}:${(this.media!.volume * 100) | 0}% `);
     });
   }
 }
@@ -181,7 +189,7 @@ export class PlaybackRate extends StepAction {
       const idx = between(value, 0, this.playbackRate.length - 1);
       const rate = this.playbackRate[idx];
       this.media!.playbackRate = rate;
-      this.toast(`${this.name}: ${rate}x`);
+      this.video.toast(`${this.name}: ${rate}x`);
     });
   }
 
@@ -205,33 +213,43 @@ export class MovieMode extends SwitchAction {
   }
 
   protected enableAction(): void {
-    this.player?.classList.add(this.className);
+    const action = (el: HTMLElement) => {
+      el.classList.add(this.className);
 
-    // 添加遮罩
-    document.body.append(
-      ((): HTMLElement => {
-        const modal = document.createElement("DIV");
-        modal.className = this.modalClassName;
-        return modal;
-      })()
-    );
+      // 添加遮罩
+      el.ownerDocument.body.append(
+        ((): HTMLElement => {
+          const modal = el.ownerDocument.createElement("DIV");
+          modal.className = this.modalClassName;
+          return modal;
+        })()
+      );
+    };
 
     // 添加父级 zIndex
-    actionByAncestor(this.player!, (element) => {
-      element.classList.add(this.parentClassName);
-      return true;
+    actionOfAllParent(this.player!, {
+      parent: (el) => {
+        el.classList.add(this.parentClassName);
+        return true;
+      },
+      iframe: action,
+      self: action,
     });
   }
 
   protected disableAction(): void {
     this.player?.classList.remove(this.className);
 
-    // 清除遮罩
-    document.querySelector(`.${this.modalClassName}`)?.remove();
+    actionOfAllSubWindow((win) => {
+      // 清除遮罩
+      win.document.querySelector(`.${this.modalClassName}`)?.remove();
 
-    // 清除 zIndex
-    document.querySelectorAll(`.${this.parentClassName}`).forEach((el) => {
-      el.classList.remove(this.parentClassName);
+      // 清除 zIndex
+      win.document
+        .querySelectorAll(`.${this.parentClassName}`)
+        .forEach((el) => {
+          el.classList.remove(this.parentClassName);
+        });
     });
   }
 }
@@ -292,5 +310,50 @@ export class Muted extends SwitchAction {
 
   protected disableAction(): void {
     this.media!.muted = false;
+  }
+}
+
+/**
+ * 视频解析
+ */
+export class Pirate extends Action {
+  protected _name = "视频解析";
+
+  private ruleArr = [
+    "https://z1.m1907.cn/?jx=",
+    "https://jsap.attakids.com/?url=",
+    "https://jx.bozrc.com:4433/player/?url=",
+    "https://okjx.cc/?url=",
+    "https://jx.blbo.cc:4433/?url=",
+    "https://www.yemu.xyz/?url=",
+    "https://jx.aidouer.net/?url=",
+    "https://jx.xmflv.com/?url=",
+    "https://jx.m3u8.tv/jiexi/?url=",
+  ];
+
+  open(idx: number) {
+    new PlayState().disable();
+    GM_openInTab(
+      this.ruleArr[between(idx, 0, this.ruleArr.length - 1)] + location.href
+    );
+  }
+}
+
+/**
+ * 视频脚本开关
+ */
+export class ScriptState extends SwitchAction {
+  protected _name = "视频脚本";
+
+  get isEnable(): boolean {
+    return this.video.config.enable;
+  }
+
+  protected enableAction(): void {
+    this.video.config.enable = true;
+  }
+
+  protected disableAction(): void {
+    this.video.config.enable = false;
   }
 }

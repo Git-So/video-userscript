@@ -1,24 +1,5 @@
-import { Video } from "./video";
-
-/**
- * 操作直系祖宗元素
- * @param element 目标元素
- * @param action 操作的动作
- * @returns 动作返回的元素
- */
-export function actionByAncestor(
-  element: HTMLElement,
-  action: (element: HTMLElement) => boolean
-): HTMLElement | null {
-  for (let _i = 0; _i < 500; _i++) {
-    const parent = element.parentElement;
-    if (!parent || parent.tagName == "BODY") break;
-    if (!action(parent)) break;
-    element = parent;
-  }
-  return element;
-}
-
+import { tagName } from "./const";
+import { ActionGroupOfParent, UserscriptWindow } from "./typing";
 /**
  * 重新设置动画
  */
@@ -28,33 +9,6 @@ export function reanimation(func: () => void) {
       func();
     })
   );
-}
-
-/**
- * 显示动作提示
- */
-export function toast(player: HTMLElement | null, text: string) {
-  if (!player) return;
-
-  // 添加提示组件
-  const className = "sooo--video-action-toast";
-  const animationClassName = "sooo--video-action-toast-animation";
-  if (!player.querySelector(`.${className}`)) {
-    const element = document.createElement("DIV");
-    element.classList.add(className);
-    player.append(element);
-  }
-
-  // 更新提示组件
-  const toast = player.querySelector(`.${className}`)!;
-  toast.classList.remove(animationClassName);
-  toast.innerHTML = "";
-  toast.append(text);
-
-  // 更新动画
-  reanimation(() => {
-    toast.classList.add(animationClassName);
-  });
 }
 
 /**
@@ -69,13 +23,6 @@ export function isActiveElementEditable(): boolean {
 }
 
 /**
- * 是否存在播放器元组件
- */
-export function isExistMedia(): boolean {
-  return !!new Video().media();
-}
-
-/**
  * 获取一个范围内的数,最小为最小值，最大为最大值
  */
 export function between(
@@ -86,4 +33,64 @@ export function between(
   if (value < min) return min;
   if (value > max) return max;
   return value;
+}
+
+/**
+ * 顶级窗口
+ */
+export function topWindow(): UserscriptWindow {
+  return unsafeWindow.top!;
+}
+
+/**
+ * 处理元素父元素，突破 iframe 限制
+ */
+export function actionOfAllParent(
+  el: HTMLElement,
+  action: ActionGroupOfParent,
+  level = 0
+): HTMLElement {
+  let parent = el.parentElement;
+  if (!parent) return el;
+
+  const currWindow = parent.ownerDocument.defaultView as Window;
+  if (parent.tagName == "BODY") {
+    if (currWindow == currWindow.top) return el;
+
+    // iframe
+    const iframeArr = currWindow.parent.document.querySelectorAll("iframe");
+    for (const iframe of iframeArr) {
+      if (currWindow != iframe.contentWindow) continue;
+      parent = iframe!;
+      break;
+    }
+  }
+
+  // 动作执行
+  if (level < 1 && action.self) action.self(el); // self
+  if (parent.tagName == tagName.iframe) {
+    // iframe
+    if (action.iframe) action.iframe(parent);
+  } else {
+    // parent
+    if (!action.parent(parent)) return el;
+  }
+
+  return actionOfAllParent(parent, action, level + 1);
+}
+
+/**
+ * 窗口子窗口
+ */
+export function actionOfAllSubWindow(
+  action: (win: Window) => void,
+  isIncludeSelf = true,
+  win = topWindow()
+) {
+  const iframeArr = win.document.querySelectorAll("iframe");
+  for (const iframe of iframeArr) {
+    if (!iframe.contentDocument || !iframe.contentWindow) continue;
+    actionOfAllSubWindow(action, true, iframe.contentWindow);
+  }
+  if (isIncludeSelf) action(win);
 }

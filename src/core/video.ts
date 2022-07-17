@@ -1,12 +1,34 @@
 import rules from "../rules";
-import { actionByAncestor } from "./func";
-import { Rule } from "./typing";
+import { Config } from "./config";
+import { actionOfAllParent, reanimation } from "./func";
+import { Rule, VideoConfig } from "./typing";
 
 export class Video {
+  config: VideoConfig;
+
+  private static _instance: Video;
+  private constructor() {
+    this.config = new Config().value;
+  }
+
+  static get instance(): Video {
+    if (!Video._instance) {
+      Video._instance = new Video();
+    }
+    return this._instance;
+  }
+
+  set lastElement(el: HTMLVideoElement | null) {
+    this.config.lastElement = el;
+  }
+  get lastElement(): HTMLVideoElement | null {
+    return this.config.lastElement;
+  }
+
   /**
    * 获取当前网站播放器规则
    */
-  rule(): Rule | null {
+  private rule(): Rule | null {
     for (const rule of rules) {
       const rg = new RegExp(rule.match);
       if (location.href.search(rg) > -1) return rule;
@@ -15,63 +37,110 @@ export class Video {
   }
 
   /**
-   * 默认播放元组件
+   * 是否存在播放器
    */
-  defaultMedia(
-    doc: Document = document,
-    isAllowPaused = true
-  ): HTMLVideoElement | null {
-    // 直接 video 组件
-    const videoArr = doc.querySelectorAll("video");
-    let media = isAllowPaused ? videoArr[0] : null;
-    for (const item of videoArr) {
-      if (item.paused) continue;
-      media = item;
-    }
-
-    // 获取 iframe 组件
-    const iframeArr = doc.querySelectorAll("iframe");
-    for (const iframe of iframeArr) {
-      if (!iframe.contentDocument) continue;
-      media = this.defaultMedia(iframe.contentDocument, false) ?? media;
-    }
-
-    return media;
+  static isExistPlayer() {
+    return !!Video.instance.player();
+  }
+  static isNotExistPlayer() {
+    return !Video.isExistPlayer();
   }
 
   /**
-   * 默认播放器组件
+   * 是否启用视频脚本
    */
-  defaultPlayer(media: HTMLVideoElement | null = null): HTMLElement | null {
-    let player: HTMLElement | null = media ?? this.defaultMedia();
-    if (!player) return null;
+  static isEnable() {
+    return Video.instance.config.enable;
+  }
+  static isDisable() {
+    return !Video.instance.config.enable;
+  }
 
-    return actionByAncestor(player, (parent) => {
-      return (
-        parent.clientHeight == player?.clientHeight &&
-        parent.clientWidth == player?.clientWidth
-      );
+  /**
+   * 页面所有视频元组件
+   */
+  private getAllVideoElement(doc: Document = document): HTMLVideoElement[] {
+    // 主页面 video 组件
+    const videoArr = doc.querySelectorAll("video");
+
+    // 获取子页面组件
+    let allVideo = [...videoArr];
+    const iframeArr = doc.querySelectorAll("iframe");
+    for (const iframe of iframeArr) {
+      if (!iframe.contentDocument) continue;
+      allVideo = [
+        ...allVideo,
+        ...this.getAllVideoElement(iframe.contentDocument),
+      ];
+    }
+    return allVideo;
+  }
+
+  /**
+   * 获取当前主视频元组件
+   */
+  element(): HTMLVideoElement | null {
+    // 播放中控件优先
+    const allMedia = this.getAllVideoElement();
+    for (const media of allMedia) {
+      if (!media.paused) {
+        this.config.lastElement = media;
+        break;
+      }
+    }
+
+    // 默认控件
+    if (!this.config.lastElement) {
+      this.config.lastElement = allMedia[0] ?? null;
+    }
+    return this.config.lastElement;
+  }
+
+  /**
+   * 获取当前播放器组件
+   */
+  player(
+    videoElement: HTMLVideoElement | null = this.element()
+  ): HTMLElement | null {
+    // 自定义规则
+    const rule = this.rule();
+    if (rule) return document.querySelector(rule.player);
+
+    // 默认规则
+    if (!videoElement) return null;
+
+    return actionOfAllParent(videoElement, {
+      parent: (el) =>
+        el.clientHeight == videoElement.clientHeight &&
+        el.clientWidth == videoElement.clientWidth,
     });
   }
 
   /**
-   * 播放器元组件
+   * 弹出视频提示
    */
-  media(): HTMLVideoElement | null {
-    const rule = this.rule();
-    if (rule) {
-      if (rule.media) return document.querySelector(rule.media);
-      return document.querySelector(`${rule.player} video`);
-    }
-    return this.defaultMedia();
-  }
+  toast(text: string) {
+    const player = this.player();
+    if (!player) return;
 
-  /**
-   * 播放器组件
-   */
-  player(media: HTMLVideoElement | null = null): HTMLElement | null {
-    const rule = this.rule();
-    if (rule) return document.querySelector(rule.player);
-    return this.defaultPlayer(media);
+    // 添加提示组件
+    const className = "sooo--video-action-toast";
+    const animationClassName = "sooo--video-action-toast-animation";
+    if (!player.querySelector(`.${className}`)) {
+      const element = document.createElement("DIV");
+      element.classList.add(className);
+      player.append(element);
+    }
+
+    // 更新提示组件
+    const toast = player.querySelector(`.${className}`)!;
+    toast.classList.remove(animationClassName);
+    toast.innerHTML = "";
+    toast.append(text);
+
+    // 更新动画
+    reanimation(() => {
+      toast.classList.add(animationClassName);
+    });
   }
 }

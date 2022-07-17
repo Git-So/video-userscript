@@ -43,4 +43,14 @@
     &-mirror video {
         transform: rotateX(0deg) rotateY(180deg);
     }
+
+    /**
+    * 视频解析
+    */
+    &-iframe {
+        @include absolute-full;
+        display: block;
+        z-index: #{$max-5-z-index};
+        border: 0;
+    }
 }

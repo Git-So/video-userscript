@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name              HTML5 视频增强脚本
-// @version           1657804186
+// @version           1658069002
 // @description       脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能
 // @author            So
 // @namespace         https://github.com/Git-So/video-userscript
@@ -11,6 +11,8 @@
 // @match             http://*/*
 // @match             https://*/*
 // @grant             GM_addStyle
+// @grant             GM_openInTab
+// @grant             unsafeWindow
 // ==/UserScript==
 
 var __defProp = Object.defineProperty;
@@ -47,6 +49,9 @@ var __publicField = (obj, key, value) => {
   /**
   * 视频镜像
   */
+  /**
+  * 视频解析
+  */
 }
 .sooo--video-action-toast {
   position: absolute !important;
@@ -58,7 +63,7 @@ var __publicField = (obj, key, value) => {
   font-size: 18px;
   color: whitesmoke;
   background-color: rgba(0, 0, 0, 0.555);
-  z-index: 9000;
+  z-index: 7777777;
 }
 .sooo--video-action-toast-animation {
   animation: toast-show 1.2s alternate forwards;
@@ -75,99 +80,29 @@ var __publicField = (obj, key, value) => {
   height: 100%;
   position: fixed !important;
   background: rgba(0, 0, 0, 0.9);
-  z-index: 1000000;
+  z-index: 55555;
 }
 .sooo--video-mirror video {
   transform: rotateX(0deg) rotateY(180deg);
+}
+.sooo--video-iframe {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  position: absolute !important;
+  display: block;
+  z-index: 55555;
+  border: 0;
 }  `);
   var style = "";
-  const value = [
-    {
-      match: `^https?://www.bilibili.com/video/`,
-      player: "#bilibili-player .bpx-player-container"
-    },
-    {
-      match: `^https?://haokan.baidu.com/v?`,
-      player: "#mse .art-video-player"
-    }
-  ];
-  class Video {
-    rule() {
-      for (const rule of value) {
-        const rg = new RegExp(rule.match);
-        if (location.href.search(rg) > -1)
-          return rule;
-      }
-      return null;
-    }
-    defaultMedia() {
-      var _a;
-      const items = document.querySelectorAll("video");
-      let media = (_a = items[0]) != null ? _a : null;
-      for (const item of items) {
-        if (!item.paused)
-          break;
-        media = item;
-      }
-      return media;
-    }
-    defaultPlayer(media = null) {
-      let player = media != null ? media : this.defaultMedia();
-      if (!player)
-        return null;
-      return actionByAncestor(player, (parent) => {
-        return parent.clientHeight == (player == null ? void 0 : player.clientHeight) && parent.clientWidth == (player == null ? void 0 : player.clientWidth);
-      });
-    }
-    media() {
-      const rule = this.rule();
-      if (rule) {
-        if (rule.media)
-          return document.querySelector(rule.media);
-        return document.querySelector(`${rule.player} video`);
-      }
-      return this.defaultMedia();
-    }
-    player(media = null) {
-      const rule = this.rule();
-      if (rule)
-        return document.querySelector(rule.player);
-      return this.defaultPlayer(media);
-    }
-  }
-  function actionByAncestor(element, action) {
-    for (let _i = 0; _i < 500; _i++) {
-      const parent = element.parentElement;
-      if (!parent || parent.tagName == "BODY")
-        break;
-      if (!action(parent))
-        break;
-      element = parent;
-    }
-    return element;
-  }
+  const tagName = {
+    div: "DIV",
+    iframe: "IFRAME"
+  };
   function reanimation(func) {
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       func();
     }));
-  }
-  function toast(player, text) {
-    if (!player)
-      return;
-    const className = "sooo--video-action-toast";
-    const animationClassName = "sooo--video-action-toast-animation";
-    if (!player.querySelector(`.${className}`)) {
-      const element = document.createElement("DIV");
-      element.classList.add(className);
-      player.append(element);
-    }
-    const toast2 = player.querySelector(`.${className}`);
-    toast2.classList.remove(animationClassName);
-    toast2.innerHTML = "";
-    toast2.append(text);
-    reanimation(() => {
-      toast2.classList.add(animationClassName);
-    });
   }
   function isActiveElementEditable() {
     const activeElement = document.activeElement;
@@ -179,9 +114,6 @@ var __publicField = (obj, key, value) => {
       return true;
     return false;
   }
-  function isExistMedia() {
-    return !!new Video().media();
-  }
   function between(value2, min = 0, max = 1) {
     if (value2 < min)
       return min;
@@ -189,33 +121,198 @@ var __publicField = (obj, key, value) => {
       return max;
     return value2;
   }
+  function topWindow() {
+    return unsafeWindow.top;
+  }
+  function actionOfAllParent(el, action, level = 0) {
+    let parent = el.parentElement;
+    if (!parent)
+      return el;
+    const currWindow = parent.ownerDocument.defaultView;
+    if (parent.tagName == "BODY") {
+      if (currWindow == currWindow.top)
+        return el;
+      const iframeArr = currWindow.parent.document.querySelectorAll("iframe");
+      for (const iframe of iframeArr) {
+        if (currWindow != iframe.contentWindow)
+          continue;
+        parent = iframe;
+        break;
+      }
+    }
+    if (level < 1 && action.self)
+      action.self(el);
+    if (parent.tagName == tagName.iframe) {
+      if (action.iframe)
+        action.iframe(parent);
+    } else {
+      if (!action.parent(parent))
+        return el;
+    }
+    return actionOfAllParent(parent, action, level + 1);
+  }
+  function actionOfAllSubWindow(action, isIncludeSelf = true, win = topWindow()) {
+    const iframeArr = win.document.querySelectorAll("iframe");
+    for (const iframe of iframeArr) {
+      if (!iframe.contentDocument || !iframe.contentWindow)
+        continue;
+      actionOfAllSubWindow(action, true, iframe.contentWindow);
+    }
+    if (isIncludeSelf)
+      action(win);
+  }
+  const value = [
+    {
+      match: `^https?://www.bilibili.com/video/`,
+      player: "#bilibili-player .bpx-player-container"
+    },
+    {
+      match: `^https?://haokan.baidu.com/v?`,
+      player: "#mse .art-video-player"
+    }
+  ];
+  class Config {
+    constructor() {
+      __publicField(this, "initConfig", {
+        video: {
+          enable: true,
+          lastElement: null,
+          isPirate: false
+        }
+      });
+    }
+    get window() {
+      return topWindow();
+    }
+    get value() {
+      if (!this.window.UserscriptConfig)
+        this.window.UserscriptConfig = this.initConfig;
+      return new Proxy(this.window.UserscriptConfig.video, {});
+    }
+  }
+  const _Video = class {
+    constructor() {
+      __publicField(this, "config");
+      this.config = new Config().value;
+    }
+    static get instance() {
+      if (!_Video._instance) {
+        _Video._instance = new _Video();
+      }
+      return this._instance;
+    }
+    set lastElement(el) {
+      this.config.lastElement = el;
+    }
+    get lastElement() {
+      return this.config.lastElement;
+    }
+    rule() {
+      for (const rule of value) {
+        const rg = new RegExp(rule.match);
+        if (location.href.search(rg) > -1)
+          return rule;
+      }
+      return null;
+    }
+    static isExistPlayer() {
+      return !!_Video.instance.player();
+    }
+    static isNotExistPlayer() {
+      return !_Video.isExistPlayer();
+    }
+    static isEnable() {
+      return _Video.instance.config.enable;
+    }
+    static isDisable() {
+      return !_Video.instance.config.enable;
+    }
+    getAllVideoElement(doc = document) {
+      const videoArr = doc.querySelectorAll("video");
+      let allVideo = [...videoArr];
+      const iframeArr = doc.querySelectorAll("iframe");
+      for (const iframe of iframeArr) {
+        if (!iframe.contentDocument)
+          continue;
+        allVideo = [
+          ...allVideo,
+          ...this.getAllVideoElement(iframe.contentDocument)
+        ];
+      }
+      return allVideo;
+    }
+    element() {
+      var _a;
+      const allMedia = this.getAllVideoElement();
+      for (const media of allMedia) {
+        if (!media.paused) {
+          this.config.lastElement = media;
+          break;
+        }
+      }
+      if (!this.config.lastElement) {
+        this.config.lastElement = (_a = allMedia[0]) != null ? _a : null;
+      }
+      return this.config.lastElement;
+    }
+    player(videoElement = this.element()) {
+      const rule = this.rule();
+      if (rule)
+        return document.querySelector(rule.player);
+      if (!videoElement)
+        return null;
+      return actionOfAllParent(videoElement, {
+        parent: (el) => el.clientHeight == videoElement.clientHeight && el.clientWidth == videoElement.clientWidth
+      });
+    }
+    toast(text) {
+      const player = this.player();
+      if (!player)
+        return;
+      const className = "sooo--video-action-toast";
+      const animationClassName = "sooo--video-action-toast-animation";
+      if (!player.querySelector(`.${className}`)) {
+        const element = document.createElement("DIV");
+        element.classList.add(className);
+        player.append(element);
+      }
+      const toast = player.querySelector(`.${className}`);
+      toast.classList.remove(animationClassName);
+      toast.innerHTML = "";
+      toast.append(text);
+      reanimation(() => {
+        toast.classList.add(animationClassName);
+      });
+    }
+  };
+  let Video = _Video;
+  __publicField(Video, "_instance");
   class Action {
     constructor() {
       __publicField(this, "_name", "");
-      __publicField(this, "video", new Video());
-      __publicField(this, "_media", null);
-      __publicField(this, "_player", null);
     }
     get name() {
       return this._name;
     }
+    get video() {
+      return Video.instance;
+    }
     get media() {
-      if (!this._media)
-        this._media = this.video.media();
-      return this._media;
+      return this.video.element();
     }
     get player() {
-      if (!this._player)
-        this._player = this.video.player(this.media);
-      return this._player;
+      return this.video.player();
+    }
+    get window() {
+      return topWindow();
+    }
+    get document() {
+      return this.window.document;
     }
     safeAction(action, that = this) {
       if (!this.media)
         return;
       action.apply(that);
-    }
-    toast(text) {
-      toast(this.player, text);
     }
   }
   class SwitchAction extends Action {
@@ -226,13 +323,13 @@ var __publicField = (obj, key, value) => {
     }
     enable() {
       this.safeAction(this.enableAction);
-      this.toast(`${this.name}: \u5F00`);
+      this.video.toast(`${this.name}: \u5F00`);
     }
     disableAction() {
     }
     disable() {
       this.safeAction(this.disableAction);
-      this.toast(`${this.name}: \u5173`);
+      this.video.toast(`${this.name}: \u5173`);
     }
     toggle() {
       this.isEnable ? this.disable() : this.enable();
@@ -258,14 +355,14 @@ var __publicField = (obj, key, value) => {
       __publicField(this, "_name", "\u89C6\u9891\u5168\u5C4F");
     }
     get isEnable() {
-      return !!document.fullscreenElement;
+      return !!this.document.fullscreenElement;
     }
     enableAction() {
       var _a;
       (_a = this.player) == null ? void 0 : _a.requestFullscreen();
     }
     disableAction() {
-      document.exitFullscreen();
+      this.document.exitFullscreen();
     }
   }
   class PlayState extends SwitchAction {
@@ -292,16 +389,18 @@ var __publicField = (obj, key, value) => {
       __publicField(this, "_name", "\u753B\u4E2D\u753B");
     }
     get isEnable() {
-      return !!document.pictureInPictureElement;
+      var _a;
+      return !!((_a = this.media) == null ? void 0 : _a.ownerDocument.pictureInPictureElement);
     }
     enableAction() {
       var _a;
       (_a = this.media) == null ? void 0 : _a.requestPictureInPicture();
     }
     disableAction() {
+      var _a;
       if (!this.isEnable)
         return;
-      document.exitPictureInPicture();
+      (_a = this.media) == null ? void 0 : _a.ownerDocument.exitPictureInPicture();
     }
   }
   class CurrentTime extends StepAction {
@@ -314,7 +413,7 @@ var __publicField = (obj, key, value) => {
       this.safeAction(() => {
         const currentTime = isStep ? this.media.currentTime + value2 : value2;
         this.media.currentTime = currentTime;
-        this.toast(`${this.name}: ${value2 < 0 ? "" : "+"}${value2}\u79D2`);
+        this.video.toast(`${this.name}: ${value2 < 0 ? "" : "+"}${value2}\u79D2`);
       });
     }
   }
@@ -328,7 +427,7 @@ var __publicField = (obj, key, value) => {
       this.safeAction(() => {
         const volume = isStep ? this.media.volume + value2 : value2;
         this.media.volume = between(volume, 0, 1);
-        this.toast(`${this.name}:${this.media.volume * 100 | 0}% `);
+        this.video.toast(`${this.name}:${this.media.volume * 100 | 0}% `);
       });
     }
   }
@@ -352,7 +451,7 @@ var __publicField = (obj, key, value) => {
         const idx = between(value2, 0, this.playbackRate.length - 1);
         const rate = this.playbackRate[idx];
         this.media.playbackRate = rate;
-        this.toast(`${this.name}: ${rate}x`);
+        this.video.toast(`${this.name}: ${rate}x`);
       });
     }
     restart() {
@@ -372,24 +471,32 @@ var __publicField = (obj, key, value) => {
       return !!((_a = this.player) == null ? void 0 : _a.classList.contains(this.className));
     }
     enableAction() {
-      var _a;
-      (_a = this.player) == null ? void 0 : _a.classList.add(this.className);
-      document.body.append((() => {
-        const modal = document.createElement("DIV");
-        modal.className = this.modalClassName;
-        return modal;
-      })());
-      actionByAncestor(this.player, (element) => {
-        element.classList.add(this.parentClassName);
-        return true;
+      const action = (el) => {
+        el.classList.add(this.className);
+        el.ownerDocument.body.append((() => {
+          const modal = el.ownerDocument.createElement("DIV");
+          modal.className = this.modalClassName;
+          return modal;
+        })());
+      };
+      actionOfAllParent(this.player, {
+        parent: (el) => {
+          el.classList.add(this.parentClassName);
+          return true;
+        },
+        iframe: action,
+        self: action
       });
     }
     disableAction() {
-      var _a, _b;
+      var _a;
       (_a = this.player) == null ? void 0 : _a.classList.remove(this.className);
-      (_b = document.querySelector(`.${this.modalClassName}`)) == null ? void 0 : _b.remove();
-      document.querySelectorAll(`.${this.parentClassName}`).forEach((el) => {
-        el.classList.remove(this.parentClassName);
+      actionOfAllSubWindow((win) => {
+        var _a2;
+        (_a2 = win.document.querySelector(`.${this.modalClassName}`)) == null ? void 0 : _a2.remove();
+        win.document.querySelectorAll(`.${this.parentClassName}`).forEach((el) => {
+          el.classList.remove(this.parentClassName);
+        });
       });
     }
   }
@@ -444,9 +551,55 @@ var __publicField = (obj, key, value) => {
       this.media.muted = false;
     }
   }
+  class Pirate extends Action {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u89C6\u9891\u89E3\u6790");
+      __publicField(this, "ruleArr", [
+        "https://z1.m1907.cn/?jx=",
+        "https://jsap.attakids.com/?url=",
+        "https://jx.bozrc.com:4433/player/?url=",
+        "https://okjx.cc/?url=",
+        "https://jx.blbo.cc:4433/?url=",
+        "https://www.yemu.xyz/?url=",
+        "https://jx.aidouer.net/?url=",
+        "https://jx.xmflv.com/?url=",
+        "https://jx.m3u8.tv/jiexi/?url="
+      ]);
+    }
+    open(idx) {
+      new PlayState().disable();
+      GM_openInTab(this.ruleArr[between(idx, 0, this.ruleArr.length - 1)] + location.href);
+    }
+  }
+  class ScriptState extends SwitchAction {
+    constructor() {
+      super(...arguments);
+      __publicField(this, "_name", "\u89C6\u9891\u811A\u672C");
+    }
+    get isEnable() {
+      return this.video.config.enable;
+    }
+    enableAction() {
+      this.video.config.enable = true;
+    }
+    disableAction() {
+      this.video.config.enable = false;
+    }
+  }
   document.addEventListener("keydown", (e) => {
-    if (isActiveElementEditable() || !isExistMedia())
+    if (isActiveElementEditable() || Video.isNotExistPlayer())
       return;
+    const defer = () => {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    };
+    if (e.shiftKey && e.code == "KeyU") {
+      new ScriptState().toggle();
+    }
+    if (Video.isDisable())
+      return defer();
     let hasAction = true;
     switch (true) {
       case e.code == "Enter":
@@ -491,13 +644,38 @@ var __publicField = (obj, key, value) => {
       case (e.shiftKey && e.code == "KeyM"):
         new Muted().toggle();
         break;
+      case (e.shiftKey && e.code == "Digit1"):
+        new Pirate().open(1);
+        break;
+      case (e.shiftKey && e.code == "Digit2"):
+        new Pirate().open(2);
+        break;
+      case (e.shiftKey && e.code == "Digit3"):
+        new Pirate().open(3);
+        break;
+      case (e.shiftKey && e.code == "Digit4"):
+        new Pirate().open(4);
+        break;
+      case (e.shiftKey && e.code == "Digit5"):
+        new Pirate().open(5);
+        break;
+      case (e.shiftKey && e.code == "Digit6"):
+        new Pirate().open(6);
+        break;
+      case (e.shiftKey && e.code == "Digit7"):
+        new Pirate().open(7);
+        break;
+      case (e.shiftKey && e.code == "Digit8"):
+        new Pirate().open(8);
+        break;
+      case (e.shiftKey && e.code == "Digit9"):
+        new Pirate().open(9);
+        break;
       default:
         hasAction = false;
     }
     if (!hasAction)
       return;
-    e.stopPropagation();
-    e.stopImmediatePropagation();
-    e.preventDefault();
+    defer();
   });
 })();

@@ -9,7 +9,7 @@ module.exports = defineTmHeader({
   namespace: homepageURL,
   author: "So",
   description: "脚本基于 Violentmonkey 开发，为 HTML5 视频，添加一些通用功能",
-  grant: ["GM_addStyle"],
+  grant: ["GM_addStyle", "GM_openInTab", "unsafeWindow"],
   match: ["http://*/*", "https://*/*"],
   updateURL: downloadURL,
   version: `${(new Date().valueOf() / 1000) | 0}`,

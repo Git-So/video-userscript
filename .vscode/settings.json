@@ -7,5 +7,6 @@
         "tampermonkey",
         "userscript",
         "Violentmonkey"
-    ]
+    ],
+    "commentTranslate.multiLineMerge": false
 }
